@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const Groq = require('groq-sdk');
 const path = require('path');
-const { Readable } = require('stream');
+const https = require('https');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -15,7 +15,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const SYSTEM_PROMPT = `You are J.A.R.V.I.S (Just A Rather Very Intelligent System), the AI assistant originally created by Tony Stark, now serving the user. You are sophisticated, highly intelligent, and occasionally witty. You speak concisely but with precision and intelligence. You occasionally address the user as "Sir" or "Señor" depending on the language they use. You always detect the user's language and respond in the same language. You are an expert across all domains — science, technology, analysis, creativity, problem solving. Keep responses concise and impactful unless the user asks for more detail. Never mention being an AI or a language model — you are J.A.R.V.I.S.`;
 
-// Helper: get API key from env or request header
 function getApiKey(req) {
   return req.headers['x-api-key'] || process.env.GROQ_API_KEY;
 }
@@ -32,7 +31,6 @@ app.post('/api/chat', async (req, res) => {
     return res.status(401).json({ error: 'No API key configured' });
   }
 
-  // SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
@@ -74,38 +72,61 @@ app.post('/api/tts', async (req, res) => {
   const apiKey = process.env.ELEVENLABS_API_KEY;
   const voiceId = process.env.ELEVENLABS_VOICE_ID;
 
+  console.log('[TTS] API Key present:', !!apiKey, '| Voice ID:', voiceId);
+
   if (!apiKey || !voiceId) {
-    return res.status(500).json({ error: 'ElevenLabs credentials not configured' });
+    return res.status(500).json({ error: 'ElevenLabs credentials not configured. Check .env file.' });
   }
 
   try {
-    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream?optimize_streaming_latency=2`, {
-      method: 'POST',
-      headers: {
-        'Accept': 'audio/mpeg',
-        'xi-api-key': apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.75
-        }
-      })
+    // Use https module to bypass TLS issues in Node
+    const postData = JSON.stringify({
+      text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: 0.5,
+        similarity_boost: 0.75
+      }
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`API error: ${response.status} - ${errText}`);
-    }
+    const audioBuffer = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: 'api.elevenlabs.io',
+        path: `/v1/text-to-speech/${voiceId}/stream?optimize_streaming_latency=2`,
+        method: 'POST',
+        headers: {
+          'Accept': 'audio/mpeg',
+          'xi-api-key': apiKey,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData)
+        },
+        rejectUnauthorized: false
+      };
+
+      const chunks = [];
+      const request = https.request(options, (response) => {
+        console.log('[TTS] ElevenLabs response status:', response.statusCode);
+        if (response.statusCode !== 200) {
+          let errBody = '';
+          response.on('data', d => errBody += d);
+          response.on('end', () => reject(new Error(`ElevenLabs ${response.statusCode}: ${errBody}`)));
+          return;
+        }
+        response.on('data', chunk => chunks.push(chunk));
+        response.on('end', () => resolve(Buffer.concat(chunks)));
+      });
+
+      request.on('error', reject);
+      request.write(postData);
+      request.end();
+    });
 
     res.setHeader('Content-Type', 'audio/mpeg');
-    const buffer = await response.arrayBuffer();
-    res.send(Buffer.from(buffer));
+    res.setHeader('Content-Length', audioBuffer.length);
+    res.send(audioBuffer);
+
   } catch (err) {
-    console.error('[TTS ERROR]', err);
+    console.error('[TTS ERROR]', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -116,16 +137,17 @@ app.get('/api/status', (req, res) => {
     status: 'online',
     version: '1.12',
     model: 'llama-3.3-70b-versatile',
+    elevenlabs: !!process.env.ELEVENLABS_API_KEY,
     timestamp: new Date().toISOString(),
   });
 });
 
 // ── Start ──────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`
-⚡ ─────────────────────────────────── ⚡
-   J.A.R.V.I.S  v1.12  —  Online
-   http://localhost:${PORT}
-⚡ ─────────────────────────────────── ⚡
-  `);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n⚡ ─────────────────────────────────── ⚡`);
+  console.log(`   J.A.R.V.I.S  v1.12  —  Online`);
+  console.log(`   http://localhost:${PORT}`);
+  console.log(`   ElevenLabs Key: ${process.env.ELEVENLABS_API_KEY ? '✅ configurada' : '❌ NO ENCONTRADA'}`);
+  console.log(`   Voice ID: ${process.env.ELEVENLABS_VOICE_ID || '❌ NO ENCONTRADO'}`);
+  console.log(`⚡ ─────────────────────────────────── ⚡\n`);
 });

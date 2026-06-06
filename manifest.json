@@ -1,0 +1,16 @@
+{
+  "name": "J.A.R.V.I.S Assistant",
+  "short_name": "J.A.R.V.I.S",
+  "description": "Just A Rather Very Intelligent System",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#050a0f",
+  "theme_color": "#050a0f",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ]
+}
