@@ -299,8 +299,7 @@
       $('tts-toggle').checked = on;
       voice.setTTS(on);
     }
-    const savedKey = localStorage.getItem('jarvis_api_key');
-    if (savedKey) $('api-key-input').value = savedKey;
+    localStorage.removeItem('jarvis_api_key');
   }
 
   /* ── Send message ────────────────────────────────── */
@@ -328,13 +327,9 @@
     const thinkEl = appendThinking();
 
     try {
-      const key = localStorage.getItem('jarvis_api_key');
-      const headers = { 'Content-Type': 'application/json' };
-      if (key) headers['X-API-Key'] = key;
-
       const resp = await fetch('/api/chat', {
         method:  'POST',
-        headers,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages }),
       });
 

@@ -28,7 +28,7 @@ app.post('/api/chat', async (req, res) => {
     return res.status(400).json({ error: 'Invalid request: messages array required' });
   }
 
-  const apiKey = req.headers['x-api-key'] || process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || req.headers['x-api-key'];
   if (!apiKey) {
     return res.status(401).json({ error: 'No Gemini API key configured' });
   }
