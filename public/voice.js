@@ -66,12 +66,10 @@ class VoiceModule {
     if (this.isListening || !this.recognition) return;
 
     try {
-      this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      await this.waveform.setMode('listening', this.micStream);
+      await this.waveform.setMode('listening', null);
       this.recognition.start();
     } catch (err) {
       console.error('[JARVIS] Mic error:', err);
-      this._releaseMic();
       if (this.onError) this.onError('mic_denied');
     }
   }
