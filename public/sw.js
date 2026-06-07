@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jarvis-v1';
+const CACHE_NAME = 'jarvis-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
@@ -13,6 +13,14 @@ self.addEventListener('install', (e) => {
         './icon.png'
       ]);
     })
+  );
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
   );
 });
 
