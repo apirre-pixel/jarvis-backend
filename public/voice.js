@@ -3,85 +3,104 @@
    ═══════════════════════════════════════ */
 class VoiceModule {
   constructor(waveform) {
-    this.waveform    = waveform;
-    this.synth       = window.speechSynthesis;
-    this.recognition = null;
-    this.isListening = false;
-    this.isSpeaking  = false;
-    this.ttsEnabled  = true;
-    this.micStream   = null;
-    this.onResult    = null;   // callback(text)
-    this.onError     = null;   // callback(errorCode)
+    this.waveform        = waveform;
+    this.synth           = window.speechSynthesis;
+    this.isListening     = false;
+    this.isSpeaking      = false;
+    this.ttsEnabled      = true;
+    this.micStream       = null;
+    this.mediaRecorder   = null;
+    this.audioChunks     = [];
+    this.onResult        = null;
+    this.onError         = null;
+    this._autoStopTimer  = null;
 
-    this._initSTT();
-    // Load voices (async in some browsers)
     if (this.synth) {
       this.synth.onvoiceschanged = () => {};
     }
   }
 
-  /* ── Speech Recognition ───────────────────────── */
-  _initSTT() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { console.warn('[JARVIS] STT not supported in this browser'); return; }
-
-    this.recognition = new SR();
-    this.recognition.continuous      = false;
-    this.recognition.interimResults  = true;
-    this.recognition.lang            = navigator.language || 'es-ES';
-    this.recognition.maxAlternatives = 1;
-
-    this.recognition.onstart = () => {
-      this.isListening = true;
-      this._updateUI();
-    };
-
-    this.recognition.onresult = (e) => {
-      let transcript = '';
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        transcript += e.results[i][0].transcript;
-      }
-      if (e.results[e.results.length - 1].isFinal) {
-        const text = transcript.trim();
-        if (text && this.onResult) this.onResult(text);
-        this.stopListening();
-      }
-    };
-
-    this.recognition.onerror = (e) => {
-      console.error('[JARVIS STT]', e.error);
-      this.stopListening();
-      if (this.onError) this.onError(e.error);
-    };
-
-    this.recognition.onend = () => {
-      this.isListening = false;
-      this._updateUI();
-      this._releaseMic();
-    };
-  }
-
+  /* ── Speech-to-Text (Groq Whisper via MediaRecorder) ── */
   async startListening() {
     if (this.isSpeaking) this.stopSpeaking();
-    if (this.isListening || !this.recognition) return;
+    if (this.isListening) return;
 
     try {
-      await this.waveform.setMode('listening', null);
-      this.recognition.start();
+      this.micStream   = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.audioChunks = [];
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : '';
+
+      this.mediaRecorder = mimeType
+        ? new MediaRecorder(this.micStream, { mimeType })
+        : new MediaRecorder(this.micStream);
+
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) this.audioChunks.push(e.data);
+      };
+
+      this.mediaRecorder.onstop = () => this._transcribe();
+
+      this.mediaRecorder.start(100);
+      this.isListening = true;
+
+      await this.waveform.setMode('listening', this.micStream);
+      this._updateUI();
+
+      this._autoStopTimer = setTimeout(() => {
+        if (this.isListening) this.stopListening();
+      }, 15000);
+
     } catch (err) {
       console.error('[JARVIS] Mic error:', err);
+      this._releaseMic();
       if (this.onError) this.onError('mic_denied');
     }
   }
 
   stopListening() {
-    if (this.recognition && this.isListening) {
-      try { this.recognition.stop(); } catch (_) {}
+    clearTimeout(this._autoStopTimer);
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
     }
-    this._releaseMic();
     this.isListening = false;
     this.waveform.setMode('idle');
     this._updateUI();
+  }
+
+  async _transcribe() {
+    this._releaseMic();
+
+    if (this.audioChunks.length === 0) return;
+
+    const lbl = document.getElementById('wave-label');
+    if (lbl) lbl.textContent = 'PROCESANDO…';
+
+    try {
+      const mimeType = this.mediaRecorder?.mimeType || 'audio/webm';
+      const blob     = new Blob(this.audioChunks, { type: mimeType });
+
+      const formData = new FormData();
+      formData.append('audio', blob, 'audio.webm');
+
+      const resp = await fetch('/api/stt', { method: 'POST', body: formData });
+      const data = await resp.json();
+
+      if (data.error) throw new Error(data.error);
+      const text = (data.text || '').trim();
+      if (text && this.onResult) this.onResult(text);
+
+    } catch (err) {
+      console.error('[JARVIS STT]', err);
+      if (this.onError) this.onError('stt_failed');
+    } finally {
+      if (lbl) lbl.textContent = 'EN ESPERA';
+      this._updateUI();
+    }
   }
 
   _releaseMic() {
@@ -95,7 +114,6 @@ class VoiceModule {
   async speak(text) {
     if (!this.ttsEnabled) return;
 
-    // Strip markdown
     const clean = text
       .replace(/\*\*(.*?)\*\*/g, '$1')
       .replace(/\*(.*?)\*/g,     '$1')
@@ -108,8 +126,8 @@ class VoiceModule {
     if (!clean) return;
 
     if (!this.audioQueue) {
-      this.audioQueue = [];
-      this.isPlayingQueue = false;
+      this.audioQueue      = [];
+      this.isPlayingQueue  = false;
     }
     this.audioQueue.push(clean);
     this._playNext();
@@ -118,7 +136,7 @@ class VoiceModule {
   async _playNext() {
     if (this.isPlayingQueue || this.audioQueue.length === 0) return;
     this.isPlayingQueue = true;
-    
+
     const text = this.audioQueue.shift();
     this.isSpeaking = true;
     this.waveform.setMode('speaking');
@@ -126,46 +144,45 @@ class VoiceModule {
 
     try {
       const response = await fetch('/api/tts', {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+        body:    JSON.stringify({ text }),
       });
 
       if (!response.ok) throw new Error('TTS fetch failed');
 
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      
+      const url  = URL.createObjectURL(blob);
+
       this.currentAudio = new Audio(url);
-      
+
       const done = () => {
         URL.revokeObjectURL(url);
         this.isPlayingQueue = false;
-        
         if (this.audioQueue.length > 0) {
-           this._playNext();
+          this._playNext();
         } else {
-           this.isSpeaking = false;
-           this.waveform.setMode('idle');
-           this._updateUI();
+          this.isSpeaking = false;
+          this.waveform.setMode('idle');
+          this._updateUI();
         }
       };
-      
+
       this.currentAudio.onended = done;
       this.currentAudio.onerror = done;
-
       await this.currentAudio.play();
+
     } catch (err) {
       console.error('[JARVIS TTS Error]', err);
       this.isPlayingQueue = false;
-      this.isSpeaking = false;
+      this.isSpeaking     = false;
       this.waveform.setMode('idle');
       this._updateUI();
     }
   }
 
   stopSpeaking() {
-    this.audioQueue = [];
+    this.audioQueue     = [];
     this.isPlayingQueue = false;
     if (this.currentAudio) {
       this.currentAudio.pause();

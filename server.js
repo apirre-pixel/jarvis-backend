@@ -5,6 +5,11 @@ const cors = require('cors');
 const Groq = require('groq-sdk');
 const path = require('path');
 const https = require('https');
+const multer = require('multer');
+const fs = require('fs');
+const os = require('os');
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -128,6 +133,33 @@ app.post('/api/tts', async (req, res) => {
   } catch (err) {
     console.error('[TTS ERROR]', err.message);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Groq Whisper STT endpoint ─────────────────────
+app.post('/api/stt', upload.single('audio'), async (req, res) => {
+  const tmpPath = path.join(os.tmpdir(), `jarvis-stt-${Date.now()}.webm`);
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No audio file received' });
+
+    const apiKey = getApiKey(req);
+    if (!apiKey) return res.status(401).json({ error: 'No API key configured' });
+
+    fs.writeFileSync(tmpPath, req.file.buffer);
+
+    const groq = new Groq({ apiKey });
+    const transcription = await groq.audio.transcriptions.create({
+      file: fs.createReadStream(tmpPath),
+      model: 'whisper-large-v3-turbo',
+      response_format: 'json',
+    });
+
+    res.json({ text: transcription.text });
+  } catch (err) {
+    console.error('[STT ERROR]', err.message);
+    res.status(500).json({ error: err.message });
+  } finally {
+    try { fs.unlinkSync(tmpPath); } catch (_) {}
   }
 });
 
