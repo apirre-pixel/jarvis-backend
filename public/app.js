@@ -8,6 +8,64 @@
   let waveform   = null;
   let voice      = null;
 
+  const MEMORY_KEY   = 'jarvis_memory';
+  const MAX_MESSAGES = 40;
+
+  /* ── Memory helpers ─────────────────────────────── */
+  function saveMemory() {
+    const trimmed = messages.slice(-MAX_MESSAGES);
+    localStorage.setItem(MEMORY_KEY, JSON.stringify(trimmed));
+  }
+
+  function loadMemory() {
+    try {
+      const raw = localStorage.getItem(MEMORY_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (!Array.isArray(saved) || saved.length === 0) return;
+
+      messages = saved;
+
+      const container = $('chat-messages');
+      container.innerHTML = '';
+
+      saved.forEach(m => {
+        const role = m.role === 'user' ? 'user' : 'jarvis';
+        const div  = document.createElement('div');
+        div.className = `msg msg-${role === 'jarvis' ? 'jarvis' : 'user'}`;
+        div.innerHTML = `
+          <div class="msg-avatar">${role === 'jarvis' ? 'J' : 'U'}</div>
+          <div class="msg-body">
+            <div class="msg-meta">
+              <span class="msg-name">${role === 'jarvis' ? 'J.A.R.V.I.S' : 'Tú'}</span>
+            </div>
+            <div class="msg-text">${esc(m.content)}</div>
+          </div>`;
+        container.appendChild(div);
+      });
+
+      const recent = saved.filter(m => m.role === 'user').slice(-6).reverse();
+      const recentList = $('recent-list');
+      recentList.innerHTML = '';
+      recent.forEach(m => {
+        const item = document.createElement('div');
+        item.className  = 'cmd-item';
+        item.title      = m.content;
+        item.textContent = m.content.length > 32 ? m.content.slice(0, 32) + '…' : m.content;
+        recentList.appendChild(item);
+      });
+
+      scrollBottom();
+    } catch (_) {
+      localStorage.removeItem(MEMORY_KEY);
+    }
+  }
+
+  function clearMemory() {
+    localStorage.removeItem(MEMORY_KEY);
+    messages = [];
+  }
+
   /* ── Boot ───────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', () => {
     waveform = new WaveformVisualizer('waveform-canvas');
@@ -30,6 +88,7 @@
     initDate();
     bindEvents();
     loadSettings();
+    loadMemory();
 
     $('boot-time').textContent = fmtTime(new Date());
   });
@@ -208,7 +267,7 @@
 
     // Clear chat
     clearBtn.addEventListener('click', () => {
-      messages = [];
+      clearMemory();
       $('chat-messages').innerHTML = `
         <div class="msg msg-jarvis">
           <div class="msg-avatar">J</div>
@@ -217,12 +276,12 @@
               <span class="msg-name">J.A.R.V.I.S</span>
               <span class="msg-time">${fmtTime(new Date())}</span>
             </div>
-            <div class="msg-text">Conversación reiniciada. ¿En qué puedo asistirle, Señor?</div>
+            <div class="msg-text">Memoria borrada. Empezamos desde cero, Señor.</div>
           </div>
         </div>`;
       $('recent-list').innerHTML = '<span class="empty-hint">Sin historial</span>';
       modal.classList.add('hidden');
-      toast('Chat limpiado', 'info');
+      toast('Memoria borrada', 'info');
     });
 
     // TTS toggle
@@ -330,6 +389,7 @@
 
       textEl.classList.remove('streaming');
       messages.push({ role: 'assistant', content: full });
+      saveMemory();
       if (sentenceBuf.trim()) {
           voice.speak(sentenceBuf.trim());
       }
