@@ -42,7 +42,7 @@ app.post('/api/chat', async (req, res) => {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       systemInstruction: SYSTEM_PROMPT,
     });
 
@@ -67,8 +67,14 @@ app.post('/api/chat', async (req, res) => {
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (err) {
-    console.error('[JARVIS GEMINI ERROR]', err);
-    res.write(`data: ${JSON.stringify({ error: err.message || err.toString() })}\n\n`);
+    console.error('[JARVIS GEMINI ERROR]', err.message);
+    let userMsg = err.message || err.toString();
+    if (err.message?.includes('429') || err.message?.includes('quota')) {
+      userMsg = 'Cupo de Gemini agotado. Espera unos minutos e intenta de nuevo.';
+    } else if (err.message?.includes('401') || err.message?.includes('API key')) {
+      userMsg = 'GEMINI_API_KEY inválida o no configurada en el servidor.';
+    }
+    res.write(`data: ${JSON.stringify({ error: userMsg })}\n\n`);
     res.end();
   }
 });
@@ -172,7 +178,7 @@ app.get('/api/status', (req, res) => {
   res.json({
     status: 'online',
     version: '1.12',
-    model: 'gemini-2.0-flash',
+    model: 'gemini-1.5-flash',
     gemini: !!process.env.GEMINI_API_KEY,
     elevenlabs: !!process.env.ELEVENLABS_API_KEY,
     timestamp: new Date().toISOString(),
