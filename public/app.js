@@ -355,30 +355,33 @@
           const raw = line.slice(6).trim();
           if (raw === '[DONE]') break;
           try {
-            const { content, error } = JSON.parse(raw);
-            if (error) throw new Error(error);
+            const parsed = JSON.parse(raw);
+            if (parsed.error) {
+              textEl.textContent = '⚠ ' + parsed.error;
+              textEl.classList.remove('streaming');
+              scrollBottom();
+              return;
+            }
+            const content = parsed.content || '';
             if (content) {
               full += content;
               sentenceBuf += content;
               textEl.textContent = full;
               textEl.classList.add('streaming');
               scrollBottom();
-              
-              // Split into sentences
+
               const splitRegex = /([.!?\n]+(?:\s+|$))/;
               const parts = sentenceBuf.split(splitRegex);
               if (parts.length > 2) {
-                 sentenceBuf = parts.pop();
-                 let readySentence = '';
-                 for(let i=0; i < parts.length; i+=2) {
-                    readySentence += parts[i] + (parts[i+1] || '');
-                 }
-                 if (readySentence.trim()) {
-                     voice.speak(readySentence.trim());
-                 }
+                sentenceBuf = parts.pop();
+                let readySentence = '';
+                for (let i = 0; i < parts.length; i += 2) {
+                  readySentence += parts[i] + (parts[i + 1] || '');
+                }
+                if (readySentence.trim()) voice.speak(readySentence.trim());
               }
             }
-          } catch (_) { /* skip parse errors */ }
+          } catch (_) { /* skip malformed JSON lines */ }
         }
       }
 
