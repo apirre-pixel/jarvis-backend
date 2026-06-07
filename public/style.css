@@ -582,6 +582,67 @@ kbd {
 .toast-error   { background: rgba(255,51,85,0.08);  border-color: var(--red);   color: var(--red);   }
 .toast-info    { background: rgba(0,212,255,0.08); border-color: var(--cyan);  color: var(--cyan);  }
 
+/* ── VERSION MODAL ──────────────────────────────── */
+.version-modal-box {
+  text-align: center;
+  max-width: 420px;
+  padding: 36px 32px 28px;
+}
+.version-badge {
+  display: inline-block;
+  font-family: var(--font-hud);
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--bg);
+  background: var(--cyan);
+  padding: 3px 14px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+.version-title {
+  font-family: var(--font-hud);
+  font-size: 15px;
+  letter-spacing: 4px;
+  color: var(--cyan);
+  margin: 0 0 6px;
+}
+.version-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 0 22px;
+  letter-spacing: 1px;
+}
+.version-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.version-list li {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.5;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.vcheck {
+  color: var(--cyan);
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.version-ok {
+  width: 100%;
+  justify-content: center;
+  letter-spacing: 3px;
+  font-size: 13px;
+}
+
 /* ── KEYFRAMES ──────────────────────────────────── */
 @keyframes spin   { from{transform:rotate(0deg);}   to{transform:rotate(360deg);}  }
 @keyframes spinR  { from{transform:rotate(360deg);} to{transform:rotate(0deg);}    }

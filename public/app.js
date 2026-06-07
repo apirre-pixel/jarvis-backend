@@ -470,4 +470,18 @@
     if (items.length > 6) items[items.length - 1].remove();
   }
 
+  // ── Version announcement modal (shows once) ──────
+  const VERSION_KEY = 'jarvis-seen-v1.2';
+  if (!localStorage.getItem(VERSION_KEY)) {
+    const vModal = document.getElementById('version-modal');
+    const vBtn   = document.getElementById('version-ok-btn');
+    if (vModal && vBtn) {
+      setTimeout(() => vModal.classList.remove('hidden'), 800);
+      vBtn.addEventListener('click', () => {
+        vModal.classList.add('hidden');
+        localStorage.setItem(VERSION_KEY, '1');
+      });
+    }
+  }
+
 })();
