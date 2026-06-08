@@ -1,0 +1,65 @@
+C:\Users\churr>pip install SpeechRecognition edge-tts pygame requests pygetwindow pywin32 pystray Pillow
+Defaulting to user installation because normal site-packages is not writeable
+Requirement already satisfied: SpeechRecognition in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (3.16.1)
+Collecting edge-tts
+  Downloading edge_tts-7.2.8-py3-none-any.whl.metadata (5.5 kB)
+Collecting pygame
+  Downloading pygame-2.6.1-cp313-cp313-win_amd64.whl.metadata (13 kB)
+Requirement already satisfied: requests in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (2.33.1)
+Requirement already satisfied: pygetwindow in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (0.0.9)
+Requirement already satisfied: pywin32 in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (311)
+Collecting pystray
+  Downloading pystray-0.19.5-py2.py3-none-any.whl.metadata (9.4 kB)
+Requirement already satisfied: Pillow in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (12.2.0)
+Requirement already satisfied: typing-extensions in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from SpeechRecognition) (4.15.0)
+Requirement already satisfied: standard-aifc in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from SpeechRecognition) (3.13.0)
+Requirement already satisfied: audioop-lts in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from SpeechRecognition) (0.2.2)
+Collecting aiohttp<4.0.0,>=3.8.0 (from edge-tts)
+  Downloading aiohttp-3.14.1-cp313-cp313-win_amd64.whl.metadata (8.5 kB)
+Requirement already satisfied: certifi>=2023.11.17 in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from edge-tts) (2026.4.22)
+Collecting tabulate<1.0.0,>=0.4.4 (from edge-tts)
+  Downloading tabulate-0.10.0-py3-none-any.whl.metadata (40 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+  Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.4.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Collecting attrs>=17.3.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+  Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+  Downloading frozenlist-1.8.0-cp313-cp313-win_amd64.whl.metadata (21 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+  Downloading multidict-6.7.1-cp313-cp313-win_amd64.whl.metadata (5.5 kB)
+Collecting propcache>=0.2.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+  Downloading propcache-0.5.2-cp313-cp313-win_amd64.whl.metadata (17 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp<4.0.0,>=3.8.0->edge-tts)
+  Downloading yarl-1.24.2-cp313-cp313-win_amd64.whl.metadata (97 kB)
+Requirement already satisfied: idna>=2.0 in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from yarl<2.0,>=1.17.0->aiohttp<4.0.0,>=3.8.0->edge-tts) (3.13)
+Requirement already satisfied: charset_normalizer<4,>=2 in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from requests) (3.4.7)
+Requirement already satisfied: urllib3<3,>=1.26 in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from requests) (2.6.3)
+Requirement already satisfied: pyrect in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from pygetwindow) (0.2.0)
+Requirement already satisfied: six in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from pystray) (1.17.0)
+Requirement already satisfied: standard-chunk in .\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages (from standard-aifc->SpeechRecognition) (3.13.0)
+Downloading edge_tts-7.2.8-py3-none-any.whl (31 kB)
+Downloading aiohttp-3.14.1-cp313-cp313-win_amd64.whl (479 kB)
+Downloading multidict-6.7.1-cp313-cp313-win_amd64.whl (45 kB)
+Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+Downloading yarl-1.24.2-cp313-cp313-win_amd64.whl (92 kB)
+Downloading pygame-2.6.1-cp313-cp313-win_amd64.whl (10.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.6/10.6 MB 62.7 MB/s  0:00:00
+Downloading pystray-0.19.5-py2.py3-none-any.whl (49 kB)
+Downloading aiohappyeyeballs-2.6.2-py3-none-any.whl (15 kB)
+Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+Downloading frozenlist-1.8.0-cp313-cp313-win_amd64.whl (43 kB)
+Downloading propcache-0.5.2-cp313-cp313-win_amd64.whl (41 kB)
+Installing collected packages: tabulate, pystray, pygame, propcache, multidict, frozenlist, attrs, aiohappyeyeballs, yarl, aiosignal, aiohttp, edge-tts
+  WARNING: The script tabulate.exe is installed in 'C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━ 10/12 [aiohttp]  WARNING: The scripts edge-playback.exe and edge-tts.exe are installed in 'C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\Scripts' which is not on PATH.
+  Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+Successfully installed aiohappyeyeballs-2.6.2 aiohttp-3.14.1 aiosignal-1.4.0 attrs-26.1.0 edge-tts-7.2.8 frozenlist-1.8.0 multidict-6.7.1 propcache-0.5.2 pygame-2.6.1 pystray-0.19.5 tabulate-0.10.0 yarl-1.24.2
+
+[notice] A new release of pip is available: 26.1 -> 26.1.2
+[notice] To update, run: C:\Users\churr\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\python.exe -m pip install --upgrade pip
+
+C:\Users\churr>
