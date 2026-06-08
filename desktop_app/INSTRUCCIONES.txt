@@ -1,0 +1,85 @@
+═══════════════════════════════════════════════
+   J.A.R.V.I.S Desktop — Guía de instalación
+═══════════════════════════════════════════════
+
+REQUISITOS
+──────────
+• Windows 10 / 11
+• Python 3.9 o superior → https://www.python.org/downloads/
+  (marca "Add Python to PATH" al instalar)
+
+
+PASO 1 — Instalar dependencias
+──────────────────────────────
+Abre CMD o PowerShell y ejecuta:
+
+  pip install SpeechRecognition pyaudio pyttsx3 requests pygetwindow pywin32
+
+  Si pyaudio da error, instálalo así:
+  pip install pipwin
+  pipwin install pyaudio
+
+
+PASO 2 — Configurar la URL de tu servidor
+──────────────────────────────────────────
+Abre jarvis_desktop.py con el bloc de notas y cambia esta línea:
+
+  JARVIS_BACKEND = "https://jarvis-backend.onrender.com"
+
+por la URL real de tu app en Render, por ejemplo:
+  JARVIS_BACKEND = "https://mi-jarvis.onrender.com"
+
+
+PASO 3 — Configurar tu clave Groq (opcional pero recomendado)
+──────────────────────────────────────────────────────────────
+Para que el reconocimiento de voz sea más preciso, añade tu clave Groq.
+Cambia esta línea en jarvis_desktop.py:
+
+  GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+
+por:
+
+  GROQ_API_KEY = "gsk_TU_CLAVE_AQUI"
+
+O añádela como variable de entorno de Windows (más seguro):
+  En buscador → "Variables de entorno" → Nueva → GROQ_API_KEY = tu clave
+
+
+PASO 4 — Ejecutar
+──────────────────
+En CMD, desde la carpeta donde guardaste los archivos:
+
+  python jarvis_desktop.py
+
+Verás: "J.A.R.V.I.S en línea. Estoy escuchando."
+
+
+CÓMO USARLO
+───────────
+Di "Jarvis" → espera a que diga "Le escucho, Señor" → da tu orden.
+
+Comandos de ventanas que entiende:
+  "Jarvis, abre Chrome"
+  "Jarvis, cierra Notepad"
+  "Jarvis, minimiza todo"
+  "Jarvis, maximiza Chrome"
+  "Jarvis, cambia a Spotify"
+
+Para todo lo demás (preguntas, tareas) usa el lenguaje natural normal.
+
+
+ARRANQUE AUTOMÁTICO CON WINDOWS (opcional)
+──────────────────────────────────────────
+1. Pulsa Win+R → escribe: shell:startup → Enter
+2. Crea un acceso directo a jarvis_desktop.py en esa carpeta
+   (clic derecho → Nuevo → Acceso directo → python ruta\jarvis_desktop.py)
+
+
+SOLUCIÓN DE PROBLEMAS
+──────────────────────
+• "No module named pyaudio"  → usa pipwin: pip install pipwin && pipwin install pyaudio
+• "No module named win32..."  → pip install pywin32
+• Micrófono no detectado     → comprueba que Windows lo tenga como dispositivo predeterminado
+• Sin respuesta del servidor → verifica la URL de Render y que el servidor esté activo
+
+═══════════════════════════════════════════════

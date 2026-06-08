@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "b9tNw6mB7gntB0izLBEyc"
+uri = "file://jarvis_desktop_windows.zip"
+type = "unspecified"
+title = "J.A.R.V.I.S Desktop — Windows"
