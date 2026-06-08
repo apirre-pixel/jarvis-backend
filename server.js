@@ -188,8 +188,8 @@ app.post('/api/stt', upload.single('audio'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No audio file received' });
 
-    const apiKey = getApiKey(req);
-    if (!apiKey) return res.status(401).json({ error: 'No API key configured' });
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) return res.status(401).json({ error: 'GROQ_API_KEY no configurada en el servidor' });
 
     fs.writeFileSync(tmpPath, req.file.buffer);
 
