@@ -1,0 +1,29 @@
+  File "C:\Users\churr\Desktop\jarvis_desktop_windows (1)\jarvis_desktop.py", line 363, in <module>
+    run_tray()
+    ~~~~~~~~^^
+  File "C:\Users\churr\Desktop\jarvis_desktop_windows (1)\jarvis_desktop.py", line 350, in run_tray
+    icon.run()
+    ~~~~~~~~^^
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_base.py", line 212, in run
+    self._run()
+    ~~~~~~~~~^^
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_win32.py", line 124, in _run
+    self._mark_ready()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_base.py", line 310, in _mark_ready
+    self.update_menu()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_base.py", line 275, in update_menu
+    self._update_menu()
+    ~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_win32.py", line 107, in _update_menu
+    hmenu = self._create_menu(self.menu, callbacks)
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_win32.py", line 284, in _create_menu
+    menu_item = self._create_menu_item(descriptor, callbacks)
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_win32.py", line 313, in _create_menu_item
+    dwTypeData=descriptor.text,
+               ^^^^^^^^^^^^^^^
+  File "C:\Users\churr\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.13_qbz5n2kfra8p0\LocalCache\local-packages\Python313\site-packages\pystray\_base.py", line 465, in text
+    return self._text(self)
+           ~~~~~~~~~~^^^^^^
+TypeError: run_tray.<locals>.<lambda>() missing 1 required positional argument: 'item'

@@ -338,7 +338,7 @@ def run_tray():
     image = create_icon_image()
     menu = pystray.Menu(
         pystray.MenuItem(
-            lambda text, item: "⏸ Pausar micrófono" if state["listening"] else "▶ Reanudar micrófono",
+            lambda item: "⏸ Pausar micrófono" if state["listening"] else "▶ Reanudar micrófono",
             toggle_listening
         ),
         pystray.MenuItem("⚙ Editar configuración", open_config),
