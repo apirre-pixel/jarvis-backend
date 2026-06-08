@@ -1,6 +1,9 @@
 SpeechRecognition
 pyaudio
-pyttsx3
+edge-tts
+pygame
 requests
 pygetwindow
 pywin32
+pystray
+Pillow

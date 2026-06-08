@@ -1,73 +1,125 @@
 """
-J.A.R.V.I.S Desktop — Windows
-Wake word "Jarvis" → escucha → responde + controla ventanas
+J.A.R.V.I.S Desktop v2 — Windows
+- Icono en bandeja del sistema (system tray)
+- Voz Microsoft Neural (edge-tts)
+- Configuración en config.json
+- Wake word "Jarvis" → escucha → responde + controla ventanas
 """
 
-import os, sys, json, time, threading, subprocess, re
+import os, sys, json, time, threading, subprocess, re, tempfile, asyncio
 import speech_recognition as sr
-import pyttsx3
-import requests
 import pygetwindow as gw
+import requests
+import pygame
+import edge_tts
+import pystray
+from PIL import Image, ImageDraw
 
-# ── CONFIGURACIÓN ───────────────────────────────────────────────────────────
-JARVIS_BACKEND = "https://jarvis-backend.onrender.com"  # ← cambia por tu URL de Render
-GROQ_API_KEY   = os.environ.get("GROQ_API_KEY", "")     # ← o ponla aquí directamente
-WAKE_WORD      = "jarvis"
-LISTEN_TIMEOUT = 8   # segundos esperando comando tras wake word
-ENERGY_THRESHOLD = 3000
+# ── CONFIGURACIÓN ────────────────────────────────────────────────────────────
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "config.json")
 
-# Apps comunes para abrir (nombre → ejecutable)
+def load_config():
+    defaults = {
+        "backend_url": "",
+        "groq_api_key": "",
+        "voice": "es-ES-AlvaroNeural",
+        "wake_word": "jarvis",
+        "listen_timeout": 8
+    }
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                defaults.update(saved)
+        except:
+            pass
+    return defaults
+
+def save_config(cfg):
+    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+        json.dump(cfg, f, indent=2, ensure_ascii=False)
+
+cfg = load_config()
+
+# Si no hay URL configurada, pedirla al arrancar
+if not cfg["backend_url"]:
+    print("=" * 55)
+    print("  Primera ejecución — Configura J.A.R.V.I.S Desktop")
+    print("=" * 55)
+    url = input("URL de tu servidor Render (ej: https://mi-jarvis.onrender.com): ").strip()
+    if url:
+        cfg["backend_url"] = url.rstrip("/")
+    key = input("Tu GROQ_API_KEY (Enter para omitir): ").strip()
+    if key:
+        cfg["groq_api_key"] = key
+    save_config(cfg)
+
+JARVIS_BACKEND = cfg["backend_url"]
+GROQ_API_KEY   = cfg["groq_api_key"] or os.environ.get("GROQ_API_KEY", "")
+VOICE          = cfg["voice"]
+WAKE_WORD      = cfg["wake_word"].lower()
+LISTEN_TIMEOUT = cfg["listen_timeout"]
+
 KNOWN_APPS = {
-    "chrome":     "chrome.exe",
-    "google":     "chrome.exe",
-    "firefox":    "firefox.exe",
-    "edge":       "msedge.exe",
-    "notepad":    "notepad.exe",
+    "chrome":        "chrome.exe",
+    "google":        "chrome.exe",
+    "opera":         "opera.exe",
+    "firefox":       "firefox.exe",
+    "edge":          "msedge.exe",
+    "notepad":       "notepad.exe",
     "bloc de notas": "notepad.exe",
-    "calculadora": "calc.exe",
-    "explorer":   "explorer.exe",
-    "explorador": "explorer.exe",
-    "word":       "winword.exe",
-    "excel":      "excel.exe",
-    "spotify":    "spotify.exe",
-    "discord":    "discord.exe",
-    "code":       "code.exe",
-    "vscode":     "code.exe",
-    "terminal":   "cmd.exe",
-    "cmd":        "cmd.exe",
-    "paint":      "mspaint.exe",
-    "vlc":        "vlc.exe",
+    "calculadora":   "calc.exe",
+    "explorer":      "explorer.exe",
+    "explorador":    "explorer.exe",
+    "word":          "winword.exe",
+    "excel":         "excel.exe",
+    "spotify":       "Spotify.exe",
+    "discord":       "Discord.exe",
+    "code":          "Code.exe",
+    "vscode":        "Code.exe",
+    "terminal":      "cmd.exe",
+    "cmd":           "cmd.exe",
+    "paint":         "mspaint.exe",
+    "vlc":           "vlc.exe",
+    "whatsapp":      "WhatsApp.exe",
+    "telegram":      "Telegram.exe",
+    "steam":         "steam.exe",
 }
 
-# ── TTS ENGINE ──────────────────────────────────────────────────────────────
-tts_engine = pyttsx3.init()
-tts_engine.setProperty("rate", 165)
+# ── AUDIO (pygame) ───────────────────────────────────────────────────────────
+pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
+_tts_lock = threading.Lock()
 
-# Intenta usar voz en español si existe
-voices = tts_engine.getProperty("voices")
-for v in voices:
-    if "spanish" in v.name.lower() or "es_" in v.id.lower():
-        tts_engine.setProperty("voice", v.id)
-        break
-
-tts_lock = threading.Lock()
+async def _edge_speak_async(text: str):
+    tmp = tempfile.NamedTemporaryFile(suffix=".mp3", delete=False)
+    tmp.close()
+    communicate = edge_tts.Communicate(text, VOICE)
+    await communicate.save(tmp.name)
+    return tmp.name
 
 def speak(text: str):
-    """Lee en voz alta el texto dado."""
-    with tts_lock:
+    """TTS con voz Microsoft Neural (edge-tts)."""
+    with _tts_lock:
         print(f"[JARVIS] {text}")
-        tts_engine.say(text)
-        tts_engine.runAndWait()
+        try:
+            path = asyncio.run(_edge_speak_async(text))
+            pygame.mixer.music.load(path)
+            pygame.mixer.music.play()
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.05)
+            pygame.mixer.music.unload()
+            try: os.unlink(path)
+            except: pass
+        except Exception as e:
+            print(f"[TTS error] {e}")
 
-
-# ── SPEECH RECOGNITION ──────────────────────────────────────────────────────
+# ── SPEECH RECOGNITION ───────────────────────────────────────────────────────
 recognizer = sr.Recognizer()
-recognizer.energy_threshold = ENERGY_THRESHOLD
+recognizer.energy_threshold = 3000
 recognizer.dynamic_energy_threshold = True
 mic = sr.Microphone()
 
-def listen_once(timeout=5, phrase_limit=10) -> str:
-    """Escucha un fragmento y devuelve el texto reconocido (o '')."""
+def listen_once(timeout=5, phrase_limit=12) -> str:
     with mic as source:
         recognizer.adjust_for_ambient_noise(source, duration=0.3)
         try:
@@ -75,7 +127,6 @@ def listen_once(timeout=5, phrase_limit=10) -> str:
         except sr.WaitTimeoutError:
             return ""
 
-    # Primero intenta Groq Whisper (más preciso)
     if GROQ_API_KEY:
         try:
             wav = audio.get_wav_data()
@@ -91,24 +142,20 @@ def listen_once(timeout=5, phrase_limit=10) -> str:
         except Exception as e:
             print(f"[Whisper error] {e}")
 
-    # Fallback: Google free STT
     try:
         return recognizer.recognize_google(audio, language="es-ES").lower()
     except Exception:
         return ""
 
-
-# ── CONTROL DE VENTANAS ─────────────────────────────────────────────────────
+# ── CONTROL DE VENTANAS ──────────────────────────────────────────────────────
 def get_window(name: str):
-    """Busca una ventana cuyo título contenga 'name'."""
     name_lower = name.lower()
     for w in gw.getAllWindows():
-        if name_lower in w.title.lower():
+        if w.title and name_lower in w.title.lower():
             return w
     return None
 
 def open_app(name: str) -> bool:
-    """Abre una aplicación conocida."""
     exe = KNOWN_APPS.get(name.lower())
     if exe:
         try:
@@ -116,39 +163,36 @@ def open_app(name: str) -> bool:
             return True
         except Exception as e:
             print(f"[open_app error] {e}")
-    return False
+    # Intentar directamente por nombre
+    try:
+        subprocess.Popen(name, shell=True)
+        return True
+    except:
+        return False
 
 def handle_window_command(text: str) -> bool:
-    """
-    Detecta comandos de ventana en el texto.
-    Devuelve True si el comando fue ejecutado (no hace falta llamar a la IA).
-    """
     t = text.lower()
 
-    # — Minimizar todo ————————————————————————
-    if re.search(r"minimiz.? todo", t):
+    if re.search(r"minimiz.? todo|minimiza todo", t):
         for w in gw.getAllWindows():
             try: w.minimize()
             except: pass
-        speak("Todo minimizado, Señor.")
+        speak("Todo minimizado.")
         return True
 
-    # — Mostrar escritorio ————————————————————
-    if re.search(r"(escritorio|desktop)", t) and re.search(r"(muestra|show|ve al|go to)", t):
+    if re.search(r"(muestra|ir al|ve al)\s+(escritorio|desktop)", t):
         subprocess.run("explorer shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}", shell=True)
         speak("Mostrando el escritorio.")
         return True
 
-    # — Abrir app ————————————————————————————
-    m = re.search(r"(abre?|abrir|lanza?|ejecuta?|inicia?|open|start)\s+(.+)", t)
+    m = re.search(r"(abre?|abrir|lanza?|ejecuta?|inicia?|open)\s+(.+)", t)
     if m:
         app_name = m.group(2).strip()
         if open_app(app_name):
             speak(f"Abriendo {app_name}.")
             return True
 
-    # — Cerrar ventana ———————————————————————
-    m = re.search(r"(cierra?|cerrar|close|mata?|kill)\s+(.+)", t)
+    m = re.search(r"(cierra?|cerrar|close|kill)\s+(.+)", t)
     if m:
         app_name = m.group(2).strip()
         win = get_window(app_name)
@@ -158,57 +202,39 @@ def handle_window_command(text: str) -> bool:
                 speak(f"{app_name} cerrado.")
                 return True
             except: pass
-        # Intentar cerrar por nombre de proceso
-        subprocess.run(f"taskkill /f /im {KNOWN_APPS.get(app_name, app_name + '.exe')}", shell=True)
-        speak(f"Intentando cerrar {app_name}.")
+        exe = KNOWN_APPS.get(app_name.lower(), app_name + ".exe")
+        subprocess.run(f"taskkill /f /im {exe}", shell=True, capture_output=True)
+        speak(f"Cerrando {app_name}.")
         return True
 
-    # — Minimizar ventana ————————————————————
     m = re.search(r"(minimiz.?)\s+(.+)", t)
     if m:
-        app_name = m.group(2).strip()
-        win = get_window(app_name)
+        win = get_window(m.group(2).strip())
         if win:
-            try:
-                win.minimize()
-                speak(f"{app_name} minimizado.")
-                return True
+            try: win.minimize(); speak(f"{m.group(2).strip()} minimizado."); return True
             except: pass
 
-    # — Maximizar ventana ————————————————————
     m = re.search(r"(maximiz.?)\s+(.+)", t)
     if m:
-        app_name = m.group(2).strip()
-        win = get_window(app_name)
+        win = get_window(m.group(2).strip())
         if win:
-            try:
-                win.maximize()
-                speak(f"{app_name} maximizado.")
-                return True
+            try: win.maximize(); speak(f"{m.group(2).strip()} maximizado."); return True
             except: pass
 
-    # — Cambiar/enfocar ventana ——————————————
-    m = re.search(r"(cambia a|switch to|enfoca?|ponme|pon)\s+(.+)", t)
+    m = re.search(r"(cambia a|switch to|enfoca?|pon)\s+(.+)", t)
     if m:
-        app_name = m.group(2).strip()
-        win = get_window(app_name)
+        win = get_window(m.group(2).strip())
         if win:
-            try:
-                win.activate()
-                speak(f"Cambiando a {app_name}.")
-                return True
+            try: win.activate(); speak(f"Cambiando a {m.group(2).strip()}."); return True
             except: pass
 
     return False
 
-
-# ── LLAMAR A LA IA ──────────────────────────────────────────────────────────
+# ── LLAMAR A LA IA ───────────────────────────────────────────────────────────
 conversation_history = []
 
 def ask_jarvis(user_text: str) -> str:
-    """Envía el mensaje al backend de J.A.R.V.I.S y devuelve la respuesta."""
     conversation_history.append({"role": "user", "content": user_text})
-
     try:
         resp = requests.post(
             f"{JARVIS_BACKEND}/api/chat",
@@ -216,86 +242,122 @@ def ask_jarvis(user_text: str) -> str:
             stream=True,
             timeout=30,
         )
-
         full_response = ""
         for line in resp.iter_lines():
-            if not line:
-                continue
+            if not line: continue
             line = line.decode("utf-8")
             if line.startswith("data: "):
                 data_str = line[6:]
-                if data_str == "[DONE]":
-                    break
+                if data_str == "[DONE]": break
                 try:
                     obj = json.loads(data_str)
                     if "content" in obj:
                         full_response += obj["content"]
                     elif "error" in obj:
                         return obj["error"]
-                except:
-                    pass
-
+                except: pass
         if full_response:
             conversation_history.append({"role": "assistant", "content": full_response})
-
         return full_response or "No obtuve respuesta del servidor."
-
     except requests.exceptions.ConnectionError:
-        return "No puedo conectar con el servidor. Verifique su conexión, Señor."
+        return "No puedo conectar con el servidor. Compruebe que Render esté activo, Señor."
     except Exception as e:
-        return f"Error al contactar con J.A.R.V.I.S: {e}"
+        return f"Error: {e}"
 
+# ── ESTADO GLOBAL ────────────────────────────────────────────────────────────
+state = {"listening": True, "icon": None}
 
-# ── BUCLE PRINCIPAL ─────────────────────────────────────────────────────────
-def main_loop():
-    speak("J.A.R.V.I.S en línea. Estoy escuchando.")
+# ── BUCLE DE ESCUCHA ─────────────────────────────────────────────────────────
+def listening_loop():
+    speak("J.A.R.V.I.S en línea. A su servicio, Señor.")
     print(f"\n[JARVIS] Escuchando wake word '{WAKE_WORD}'...\n")
 
     while True:
         try:
-            text = listen_once(timeout=None, phrase_limit=5)
+            if not state["listening"]:
+                time.sleep(0.5)
+                continue
 
+            text = listen_once(timeout=None, phrase_limit=5)
             if not text:
                 continue
 
             if WAKE_WORD in text:
                 speak("Le escucho, Señor.")
-                print("[JARVIS] Wake word detectada — esperando comando...")
+                print("[JARVIS] Activado — esperando comando...")
+                if state["icon"]:
+                    state["icon"].notify("J.A.R.V.I.S activado", "Le escucho, Señor.")
 
                 command = listen_once(timeout=LISTEN_TIMEOUT, phrase_limit=15)
 
                 if not command:
-                    speak("No le he escuchado bien. Puede repetirlo.")
+                    speak("No le he escuchado, Señor.")
                     continue
 
                 print(f"[COMANDO] {command}")
 
-                # Intentar comando de ventana primero
                 if handle_window_command(command):
                     continue
 
-                # Si no es comando de ventana → preguntar a la IA
                 response = ask_jarvis(command)
                 speak(response)
 
         except KeyboardInterrupt:
-            speak("Apagando sistemas. Hasta luego, Señor.")
+            speak("Apagando sistemas.")
             sys.exit(0)
         except Exception as e:
             print(f"[ERROR] {e}")
             time.sleep(1)
 
+# ── SYSTEM TRAY ──────────────────────────────────────────────────────────────
+def create_icon_image():
+    """Crea el icono de la bandeja — círculo azul estilo arc-reactor."""
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw.ellipse([2, 2, 62, 62], fill=(0, 20, 40, 255), outline=(0, 212, 255, 255), width=3)
+    draw.ellipse([14, 14, 50, 50], fill=None, outline=(0, 212, 255, 200), width=2)
+    draw.ellipse([24, 24, 40, 40], fill=(0, 212, 255, 255))
+    return img
 
-# ── ENTRADA ─────────────────────────────────────────────────────────────────
+def toggle_listening(icon, item):
+    state["listening"] = not state["listening"]
+    status = "activado" if state["listening"] else "pausado"
+    speak(f"Micrófono {status}.")
+    icon.title = f"J.A.R.V.I.S — {'Escuchando' if state['listening'] else 'Pausado'}"
+
+def open_config(icon, item):
+    subprocess.Popen(f'notepad "{CONFIG_FILE}"', shell=True)
+
+def exit_app(icon, item):
+    speak("Hasta luego, Señor.")
+    time.sleep(1)
+    icon.stop()
+    os._exit(0)
+
+def run_tray():
+    image = create_icon_image()
+    menu = pystray.Menu(
+        pystray.MenuItem(
+            lambda text, item: "⏸ Pausar micrófono" if state["listening"] else "▶ Reanudar micrófono",
+            toggle_listening
+        ),
+        pystray.MenuItem("⚙ Editar configuración", open_config),
+        pystray.Menu.SEPARATOR,
+        pystray.MenuItem("✕ Salir", exit_app),
+    )
+    icon = pystray.Icon("JARVIS", image, "J.A.R.V.I.S — Escuchando", menu)
+    state["icon"] = icon
+    icon.run()
+
+# ── ENTRADA ──────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print("=" * 55)
-    print("   J.A.R.V.I.S Desktop — Windows")
-    print("   Di 'Jarvis' para activar")
+    print("   J.A.R.V.I.S Desktop v2")
+    print(f"   Backend: {JARVIS_BACKEND or '⚠ NO CONFIGURADO'}")
+    print(f"   Groq STT: {'✅' if GROQ_API_KEY else '❌ usando Google gratuito'}")
     print("=" * 55)
 
-    if not GROQ_API_KEY:
-        print("[AVISO] GROQ_API_KEY no configurada — usando Google STT gratuito")
-    if JARVIS_BACKEND == "https://jarvis-backend.onrender.com":
-        print("[AVISO] Cambia JARVIS_BACKEND por tu URL real de Render en el script")
+    t = threading.Thread(target=listening_loop, daemon=True)
+    t.start()
 
-    main_loop()
+    run_tray()
