@@ -12,3 +12,9 @@ id = "KEx5jsYGhxizT7HJCl-Dl"
 uri = "file://jarvis_local_helper.zip"
 type = "unspecified"
 title = "J.A.R.V.I.S Local Helper (control de apps)"
+
+[[outputs]]
+id = "5BdgZF5nXWFcyiFeSpgi3"
+uri = "file://jarvis_local_app.zip"
+type = "unspecified"
+title = "J.A.R.V.I.S Local App — Solo para ti"

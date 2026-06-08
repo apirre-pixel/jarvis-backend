@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>J.A.R.V.I.S — AI Assistant</title>
+  <meta name="description" content="J.A.R.V.I.S — Just A Rather Very Intelligent System. Your personal AI assistant powered by Gemini." />
+  <meta name="theme-color" content="#050a0f" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Particles Background -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Scanlines overlay -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- ── MAIN APP ───────────────────────────────── -->
+  <div class="jarvis-app">
+
+    <!-- ── HEADER ─────────────────────────────── -->
+    <header class="jarvis-header">
+      <div class="header-left">
+        <div class="arc-reactor-mini" aria-hidden="true">
+          <div class="arm arm-outer"></div>
+          <div class="arm arm-middle"></div>
+          <div class="mini-core"></div>
+        </div>
+        <div class="brand">
+          <h1 class="brand-title">J.A.R.V.I.S</h1>
+          <span class="brand-sub">Just A Rather Very Intelligent System</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-pill" id="status-pill">
+          <span class="status-dot"></span>
+          <span id="status-text">ONLINE</span>
+        </div>
+        <div class="header-clock" id="header-clock" aria-live="polite">00:00:00</div>
+        <button class="icon-btn bg-btn" id="btn-background" title="Activar modo fondo" aria-label="Modo fondo">
+          <span id="bg-dot" class="bg-dot" style="display:none"></span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="settings-btn" title="Configuración" aria-label="Abrir configuración">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ── MAIN ───────────────────────────────── -->
+    <main class="jarvis-main">
+
+      <!-- Left Panel -->
+      <aside class="side-panel panel-left" aria-label="Sistema">
+        <div class="panel-card">
+          <div class="panel-label">SISTEMA</div>
+          <div class="data-list">
+            <div class="data-row"><span class="dk">Estado</span><span class="dv green">Activo</span></div>
+            <div class="data-row"><span class="dk">Versión</span><span class="dv">v1.12</span></div>
+            <div class="data-row"><span class="dk">Modelo</span><span class="dv">Gemini 2.0</span></div>
+            <div class="data-row"><span class="dk">Motor</span><span class="dv">Google</span></div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-label">MÉTRICAS</div>
+          <div class="metrics">
+            <div class="metric-row" data-base="68">
+              <span class="mk">CPU</span>
+              <div class="mtrack"><div class="mfill"></div></div>
+              <span class="mv">68%</span>
+            </div>
+            <div class="metric-row" data-base="42">
+              <span class="mk">MEM</span>
+              <div class="mtrack"><div class="mfill"></div></div>
+              <span class="mv">42%</span>
+            </div>
+            <div class="metric-row" data-base="91">
+              <span class="mk">NET</span>
+              <div class="mtrack"><div class="mfill"></div></div>
+              <span class="mv">91%</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-label">FECHA</div>
+          <div class="panel-date" id="panel-date">--/--/----</div>
+        </div>
+      </aside>
+
+      <!-- Chat Section -->
+      <section class="chat-section">
+
+        <!-- Arc Reactor -->
+        <div class="arc-wrapper" aria-hidden="true">
+          <div class="arc-reactor" id="arc-reactor">
+            <div class="arc-ring r1"></div>
+            <div class="arc-ring r2"></div>
+            <div class="arc-ring r3"></div>
+            <div class="arc-core-outer"></div>
+            <div class="arc-core-inner"></div>
+            <div class="arc-glow-pulse"></div>
+          </div>
+          <div class="arc-label">J.A.R.V.I.S v1.12</div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Mensajes">
+          <div class="msg msg-jarvis">
+            <div class="msg-avatar">J</div>
+            <div class="msg-body">
+              <div class="msg-meta">
+                <span class="msg-name">J.A.R.V.I.S</span>
+                <span class="msg-time" id="boot-time">--:--</span>
+              </div>
+              <div class="msg-text">Todos los sistemas en línea. Estoy listo para asistirle, Señor. ¿En qué puedo ayudarle hoy?</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Waveform -->
+        <div class="waveform-wrap" id="waveform-wrap">
+          <canvas id="waveform-canvas" aria-label="Visualizador de audio"></canvas>
+          <span class="wave-label" id="wave-label">EN ESPERA</span>
+        </div>
+
+        <!-- Input -->
+        <div class="input-zone">
+          <div class="input-box" id="input-box">
+            <textarea
+              id="chat-input"
+              placeholder="Enviar mensaje a Jarvis..."
+              rows="1"
+              maxlength="4000"
+              aria-label="Mensaje para Jarvis"
+            ></textarea>
+            <div class="input-btns">
+              <button class="btn-mic" id="btn-mic" title="Hablar" aria-label="Activar micrófono">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="23"/>
+                  <line x1="8" y1="23" x2="16" y2="23"/>
+                </svg>
+              </button>
+              <button class="btn-send" id="btn-send" title="Enviar" aria-label="Enviar mensaje">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="input-footer">
+            <span id="listening-ind" class="ind hidden">🔴 Escuchando...</span>
+            <span id="speaking-ind" class="ind hidden">🔊 Jarvis hablando...</span>
+            <span class="input-tip">
+              <kbd>Enter</kbd> enviar &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> nueva línea
+            </span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Panel -->
+      <aside class="side-panel panel-right" aria-label="Comandos recientes">
+        <div class="panel-card">
+          <div class="panel-label">COMANDOS RECIENTES</div>
+          <div class="recent-list" id="recent-list">
+            <span class="empty-hint">Sin historial</span>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-label">CAPACIDADES</div>
+          <div class="caps-list">
+            <div class="cap">🧠 Chat IA avanzado</div>
+            <div class="cap">🎙️ Reconocimiento de voz</div>
+            <div class="cap">🔊 Síntesis de voz</div>
+            <div class="cap">🌊 Visualizador audio</div>
+            <div class="cap">🌐 Multiidioma</div>
+            <div class="cap">📱 Diseño móvil</div>
+          </div>
+        </div>
+        <div class="panel-card">
+          <div class="panel-label">VOZ</div>
+          <label class="toggle-row">
+            <span>Hablar respuestas</span>
+            <label class="toggle">
+              <input type="checkbox" id="tts-toggle" checked />
+              <span class="track"></span>
+            </label>
+          </label>
+        </div>
+      </aside>
+
+    </main>
+  </div>
+
+  <!-- ── SETTINGS MODAL ──────────────────────── -->
+  <div class="modal-bg hidden" id="settings-modal" role="dialog" aria-modal="true" aria-label="Configuración">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="modal-title">⚙ CONFIGURACIÓN</span>
+        <button class="icon-btn" id="modal-close" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-block">
+          <label class="setting-label">Gemini API Key</label>
+          <input type="password" id="api-key-input" placeholder="gsk_..." class="setting-input" autocomplete="off" />
+          <button class="btn-action" id="btn-save-key">💾 Guardar Key</button>
+        </div>
+        <div class="setting-block">
+          <label class="setting-label">Conversación</label>
+          <button class="btn-action btn-danger" id="btn-clear">🗑 Limpiar chat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VERSION ANNOUNCEMENT MODAL ─────────── -->
+  <div class="modal-bg hidden" id="version-modal" role="dialog" aria-modal="true" aria-label="Novedad">
+    <div class="modal version-modal-box">
+      <div class="version-badge">v1.2</div>
+      <h2 class="version-title">ACTUALIZACIÓN DEL SISTEMA</h2>
+      <p class="version-sub">J.A.R.V.I.S ha sido mejorado</p>
+      <ul class="version-list">
+        <li><span class="vcheck">✦</span> <strong>Chat con Gemini 2.0</strong> — IA más rápida y precisa, con Groq como respaldo automático</li>
+        <li><span class="vcheck">✦</span> <strong>Memoria por dispositivo</strong> — cada usuario conserva su historial entre sesiones</li>
+      </ul>
+      <button class="btn-action version-ok" id="version-ok-btn">ENTENDIDO</button>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container" aria-live="assertive"></div>
+
+  <script src="waveform.js"></script>
+  <script src="voice.js"></script>
+  <script src="background.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
