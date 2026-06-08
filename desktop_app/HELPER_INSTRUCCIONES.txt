@@ -1,0 +1,48 @@
+═══════════════════════════════════════════════
+   J.A.R.V.I.S Local Helper — Guía rápida
+═══════════════════════════════════════════════
+
+¿Qué es esto?
+─────────────
+Un pequeño programa que corre en tu PC y permite
+que la web app de J.A.R.V.I.S abra, cierre y
+controle las apps de Windows cuando usas el
+Modo Fondo.
+
+Sin él, J.A.R.V.I.S igual funciona (chat con IA),
+pero no puede controlar tus ventanas.
+
+
+INSTALAR (solo la primera vez)
+──────────────────────────────
+En CMD:
+  pip install pygetwindow pywin32
+
+
+EJECUTAR
+────────
+En CMD, desde esta carpeta:
+  python local_helper.py
+
+Minimiza esa ventana — no la cierres.
+
+
+CÓMO USARLO
+───────────
+1. Abre la app web de J.A.R.V.I.S en Chrome o Edge
+2. Haz clic en el botón de micrófono del header (🎙)
+   → se ilumina en azul = Modo Fondo ACTIVO
+3. Di "Jarvis, abre Opera"
+4. Di "Jarvis, cierra Spotify"
+5. Di "Jarvis, minimiza todo"
+
+La web detecta la palabra "Jarvis", extrae el
+comando y se lo manda al helper local.
+
+
+ARRANQUE AUTOMÁTICO (opcional)
+──────────────────────────────
+1. Win+R → shell:startup → Enter
+2. Crea acceso directo a local_helper.py ahí
+
+═══════════════════════════════════════════════

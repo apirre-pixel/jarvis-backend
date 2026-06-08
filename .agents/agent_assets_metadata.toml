@@ -6,3 +6,9 @@ id = "b9tNw6mB7gntB0izLBEyc"
 uri = "file://jarvis_desktop_windows.zip"
 type = "unspecified"
 title = "J.A.R.V.I.S Desktop v2 — corregido"
+
+[[outputs]]
+id = "KEx5jsYGhxizT7HJCl-Dl"
+uri = "file://jarvis_local_helper.zip"
+type = "unspecified"
+title = "J.A.R.V.I.S Local Helper (control de apps)"

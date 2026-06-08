@@ -582,6 +582,33 @@ kbd {
 .toast-error   { background: rgba(255,51,85,0.08);  border-color: var(--red);   color: var(--red);   }
 .toast-info    { background: rgba(0,212,255,0.08); border-color: var(--cyan);  color: var(--cyan);  }
 
+/* ── BACKGROUND MODE BUTTON ─────────────────────── */
+.bg-btn {
+  position: relative;
+}
+.bg-dot {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 6px var(--cyan);
+  animation: pulse 1.2s infinite;
+}
+.bg-btn.bg-active {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(0,212,255,0.35);
+}
+.bg-btn.bg-activated {
+  animation: bgFlash 0.4s ease;
+}
+@keyframes bgFlash {
+  0%   { box-shadow: 0 0 0 rgba(0,212,255,0); }
+  50%  { box-shadow: 0 0 22px rgba(0,212,255,0.8); }
+  100% { box-shadow: 0 0 0 rgba(0,212,255,0); }
+}
+
 /* ── VERSION MODAL ──────────────────────────────── */
 .version-modal-box {
   text-align: center;
