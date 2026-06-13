@@ -226,6 +226,16 @@
           <label class="setting-label">Conversación</label>
           <button class="btn-action btn-danger" id="btn-clear">🗑 Limpiar chat</button>
         </div>
+        <div class="setting-block">
+          <label class="setting-label">📱 Contactos WhatsApp</label>
+          <p class="setting-hint">Di "Jarvis, manda un WhatsApp a [nombre] diciendo [mensaje]"</p>
+          <div class="contact-add-row">
+            <input type="text"  id="wa-name"  placeholder="Nombre"    class="setting-input contact-input" />
+            <input type="tel"   id="wa-phone" placeholder="+34612345678" class="setting-input contact-input" />
+            <button class="btn-action btn-small" id="btn-add-contact">＋ Añadir</button>
+          </div>
+          <div class="contact-list" id="contact-list"></div>
+        </div>
       </div>
     </div>
   </div>

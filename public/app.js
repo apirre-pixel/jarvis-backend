@@ -314,6 +314,134 @@
       voice.setTTS(on);
     }
     localStorage.removeItem('jarvis_api_key');
+    loadContacts();
+  }
+
+  /* ── WhatsApp contacts ───────────────────────────── */
+  const WA_KEY = 'jarvis_wa_contacts';
+
+  function getContacts() {
+    try { return JSON.parse(localStorage.getItem(WA_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveContacts(list) {
+    localStorage.setItem(WA_KEY, JSON.stringify(list));
+  }
+
+  function loadContacts() {
+    const list = $('contact-list');
+    if (!list) return;
+    const contacts = getContacts();
+    list.innerHTML = contacts.length ? '' : '<span class="empty-hint">Sin contactos</span>';
+    contacts.forEach((c, i) => {
+      const row = document.createElement('div');
+      row.className = 'contact-row';
+      row.innerHTML = `
+        <span class="contact-name">${esc(c.name)}</span>
+        <span class="contact-phone">${esc(c.phone)}</span>
+        <button class="contact-del" data-i="${i}" title="Eliminar">✕</button>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('.contact-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const contacts = getContacts();
+        contacts.splice(+btn.dataset.i, 1);
+        saveContacts(contacts);
+        loadContacts();
+      });
+    });
+
+    // Bind add button once
+    const addBtn = $('btn-add-contact');
+    if (addBtn && !addBtn._bound) {
+      addBtn._bound = true;
+      addBtn.addEventListener('click', () => {
+        const name  = $('wa-name').value.trim();
+        const phone = $('wa-phone').value.trim().replace(/\s+/g, '');
+        if (!name || !phone) { toast('Escribe nombre y número', 'error'); return; }
+        const contacts = getContacts();
+        contacts.push({ name, phone });
+        saveContacts(contacts);
+        $('wa-name').value = '';
+        $('wa-phone').value = '';
+        loadContacts();
+        toast(`${name} añadido`, 'success');
+      });
+    }
+  }
+
+  /* ── WhatsApp command parser ─────────────────────── */
+  function parseWhatsAppCommand(text) {
+    const t = text.toLowerCase();
+    // Detecta: "manda(r)/envía(r) (un) whatsapp/mensaje/wasa a [NOMBRE] diciendo/que/: [MENSAJE]"
+    const m = t.match(
+      /(?:manda(?:r)?|env[ií]a(?:r)?)\s+(?:un\s+)?(?:whatsapp|wasa(?:p)?|mensaje)\s+a\s+(.+?)\s+(?:diciendo|que|:)\s+(.+)/i
+    );
+    if (!m) return null;
+
+    const nameRaw = m[1].trim();
+    const msgText = m[2].trim();
+
+    // Buscar contacto por nombre (búsqueda parcial)
+    const contacts = getContacts();
+    const contact  = contacts.find(c =>
+      c.name.toLowerCase().includes(nameRaw) || nameRaw.includes(c.name.toLowerCase())
+    );
+
+    return { name: nameRaw, contact, message: msgText };
+  }
+
+  function handleWhatsApp(text) {
+    const result = parseWhatsAppCommand(text);
+    if (!result) return false;
+
+    const { name, contact, message } = result;
+
+    if (!contact) {
+      // No está en los contactos — mostrar aviso
+      appendJarvisMsg(
+        `No tengo el número de <strong>${esc(name)}</strong> guardado. Añádelo en ⚙ Configuración → Contactos WhatsApp.`
+      );
+      if (voice.ttsEnabled) voice.speak(`No tengo el número de ${name}. Añádelo en la configuración.`);
+      return true;
+    }
+
+    // Construir link wa.me
+    const phone   = contact.phone.replace(/[^\d]/g, '');
+    const waUrl   = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    const preview = message.length > 60 ? message.slice(0, 60) + '…' : message;
+
+    appendJarvisMsg(
+      `Mensaje listo para <strong>${esc(contact.name)}</strong>:<br>
+       <em>"${esc(preview)}"</em><br><br>
+       <a class="wa-btn" href="${waUrl}" target="_blank" rel="noopener">
+         📱 Abrir en WhatsApp
+       </a>`
+    );
+
+    if (voice.ttsEnabled) voice.speak(`Mensaje preparado para ${contact.name}. Toca el botón para enviarlo.`);
+
+    // En móvil/desktop abre WhatsApp directamente
+    setTimeout(() => window.open(waUrl, '_blank'), 400);
+    return true;
+  }
+
+  function appendJarvisMsg(html) {
+    const container = $('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg msg-jarvis';
+    div.innerHTML = `
+      <div class="msg-avatar">J</div>
+      <div class="msg-body">
+        <div class="msg-meta">
+          <span class="msg-name">J.A.R.V.I.S</span>
+          <span class="msg-time">${fmtTime(new Date())}</span>
+        </div>
+        <div class="msg-text">${html}</div>
+      </div>`;
+    container.appendChild(div);
+    scrollBottom();
   }
 
   /* ── Send message ────────────────────────────────── */
@@ -325,10 +453,13 @@
     input.value = '';
     autoResize(input);
 
-    messages.push({ role: 'user', content: text });
     appendMsg('user', text);
     addRecent(text);
 
+    // Interceptar comando WhatsApp antes de llamar a la IA
+    if (handleWhatsApp(text)) return;
+
+    messages.push({ role: 'user', content: text });
     await fetchResponse();
   }
 

@@ -582,6 +582,68 @@ kbd {
 .toast-error   { background: rgba(255,51,85,0.08);  border-color: var(--red);   color: var(--red);   }
 .toast-info    { background: rgba(0,212,255,0.08); border-color: var(--cyan);  color: var(--cyan);  }
 
+/* ── WHATSAPP CONTACTS ───────────────────────────── */
+.setting-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin: -6px 0 10px;
+  line-height: 1.4;
+}
+.contact-add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.contact-input {
+  flex: 1;
+  min-width: 90px;
+}
+.btn-small {
+  padding: 8px 12px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0,212,255,0.04);
+  border: 1px solid rgba(0,212,255,0.12);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+}
+.contact-name  { color: var(--cyan); font-weight: 600; flex: 1; }
+.contact-phone { color: var(--muted); font-size: 11px; }
+.contact-del   {
+  background: none; border: none; color: var(--red);
+  cursor: pointer; font-size: 13px; padding: 0 4px; opacity: 0.7;
+}
+.contact-del:hover { opacity: 1; }
+.wa-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 8px 18px;
+  background: rgba(37,211,102,0.12);
+  border: 1px solid #25d366;
+  border-radius: 8px;
+  color: #25d366;
+  text-decoration: none;
+  font-size: 13px;
+  font-family: var(--font-hud);
+  letter-spacing: 1px;
+  transition: background 0.2s;
+}
+.wa-btn:hover { background: rgba(37,211,102,0.22); }
+
 /* ── BACKGROUND MODE BUTTON ─────────────────────── */
 .bg-btn {
   position: relative;
