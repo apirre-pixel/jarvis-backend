@@ -71,9 +71,6 @@
     waveform = new WaveformVisualizer('waveform-canvas');
     voice    = new VoiceModule(waveform);
 
-    // Expose toast globally so BackgroundMode can use it
-    window._jarvisToast = toast;
-
     voice.onResult = (text) => {
       const inp = $('chat-input');
       inp.value = text;
@@ -84,17 +81,6 @@
       if (code === 'mic_denied') toast('Acceso al micrófono denegado', 'error');
       else toast('Error de micrófono: ' + code, 'error');
     };
-
-    // Background mode — injects command into chat and sends
-    const bgMode = new BackgroundMode(voice, (text) => {
-      const inp = $('chat-input');
-      inp.value = text;
-      autoResize(inp);
-      toast(`"${text}"`, 'info');
-      setTimeout(sendMessage, 200);
-    });
-
-    $('btn-background')?.addEventListener('click', () => bgMode.toggle());
 
     initParticles();
     initClock();
@@ -613,20 +599,6 @@
     // Keep max 6
     const items = container.querySelectorAll('.cmd-item');
     if (items.length > 6) items[items.length - 1].remove();
-  }
-
-  // ── Version announcement modal (shows once) ──────
-  const VERSION_KEY = 'jarvis-seen-v1.2';
-  if (!localStorage.getItem(VERSION_KEY)) {
-    const vModal = document.getElementById('version-modal');
-    const vBtn   = document.getElementById('version-ok-btn');
-    if (vModal && vBtn) {
-      setTimeout(() => vModal.classList.remove('hidden'), 800);
-      vBtn.addEventListener('click', () => {
-        vModal.classList.add('hidden');
-        localStorage.setItem(VERSION_KEY, '1');
-      });
-    }
   }
 
 })();
