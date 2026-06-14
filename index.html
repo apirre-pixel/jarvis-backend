@@ -49,7 +49,7 @@
         </div>
         <div class="header-clock" id="header-clock" aria-live="polite">00:00:00</div>
         <button class="icon-btn" id="settings-btn" title="Configuración" aria-label="Abrir configuración">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 0 2.83 0l.06-.06a1.65 1.65 0 0 0 .33-1.82m-9.5-5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0z"/></svg>
         </button>
       </div>
     </header>
@@ -183,8 +183,8 @@
             <div class="cap">🎙️ Reconocimiento de voz</div>
             <div class="cap">🔊 Síntesis de voz</div>
             <div class="cap">🌊 Visualizador audio</div>
+            <div class="cap">📱 WhatsApp integration</div>
             <div class="cap">🌐 Multiidioma</div>
-            <div class="cap">📱 Diseño móvil</div>
           </div>
         </div>
         <div class="panel-card">
@@ -218,6 +218,16 @@
         <div class="setting-block">
           <label class="setting-label">Conversación</label>
           <button class="btn-action btn-danger" id="btn-clear">🗑 Limpiar chat</button>
+        </div>
+        <div class="setting-block">
+          <label class="setting-label">📱 Contactos WhatsApp</label>
+          <p class="setting-hint">Di "Jarvis, manda un WhatsApp a [nombre] diciendo [mensaje]"</p>
+          <div class="contact-add-row">
+            <input type="text"  id="wa-name"  placeholder="Nombre"    class="setting-input contact-input" />
+            <input type="tel"   id="wa-phone" placeholder="+34612345678" class="setting-input contact-input" />
+            <button class="btn-action btn-small" id="btn-add-contact">＋ Añadir</button>
+          </div>
+          <div class="contact-list" id="contact-list"></div>
         </div>
       </div>
     </div>
