@@ -58,7 +58,7 @@ class VoiceModule {
     } catch (err) {
       console.error('[JARVIS] Mic error:', err);
       this._releaseMic();
-      if (this.onError) this.onError('mic_denied');
+      if (this.onError) this.onError('mic_denied', err.message || 'Micrófono inaccesible');
     }
   }
 
@@ -96,7 +96,7 @@ class VoiceModule {
 
     } catch (err) {
       console.error('[JARVIS STT]', err);
-      if (this.onError) this.onError('stt_failed');
+      if (this.onError) this.onError('stt_failed', err.message || 'Error desconocido');
     } finally {
       if (lbl) lbl.textContent = 'EN ESPERA';
       this._updateUI();

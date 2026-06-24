@@ -22,9 +22,14 @@
       autoResize(inp);
       setTimeout(sendMessage, 250);
     };
-    voice.onError = (code) => {
-      if (code === 'mic_denied') toast('Acceso al micrófono denegado', 'error');
-      else toast('Error de micrófono: ' + code, 'error');
+    voice.onError = (code, detail) => {
+      if (code === 'mic_denied') {
+        toast('Acceso al micrófono denegado' + (detail ? `: ${detail}` : ''), 'error');
+      } else if (code === 'stt_failed') {
+        toast('Falló el reconocimiento de voz' + (detail ? `: ${detail}` : ''), 'error');
+      } else {
+        toast('Error de micrófono: ' + code + (detail ? ` (${detail})` : ''), 'error');
+      }
     };
 
     const bgMode = new BackgroundMode(voice, (text) => {

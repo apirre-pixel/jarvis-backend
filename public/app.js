@@ -7,6 +7,7 @@
   let streaming  = false;
   let waveform   = null;
   let voice      = null;
+  let bgMode     = null;
 
   const MEMORY_KEY   = 'jarvis_memory';
   const MAX_MESSAGES = 40;
@@ -77,10 +78,25 @@
       autoResize(inp);
       setTimeout(sendMessage, 250);
     };
-    voice.onError = (code) => {
-      if (code === 'mic_denied') toast('Acceso al micrófono denegado', 'error');
-      else toast('Error de micrófono: ' + code, 'error');
+    voice.onError = (code, detail) => {
+      if (code === 'mic_denied') {
+        toast('Acceso al micrófono denegado' + (detail ? `: ${detail}` : ''), 'error');
+      } else if (code === 'stt_failed') {
+        toast('Falló el reconocimiento de voz' + (detail ? `: ${detail}` : ''), 'error');
+      } else {
+        toast('Error de micrófono: ' + code + (detail ? ` (${detail})` : ''), 'error');
+      }
     };
+    window._jarvisToast = toast;
+
+    bgMode = new BackgroundMode(voice, (text) => {
+      const inp = $('chat-input');
+      inp.value = text;
+      autoResize(inp);
+      toast(`"${text}"`, 'info');
+      setTimeout(sendMessage, 200);
+    });
+    $('btn-background')?.addEventListener('click', () => bgMode.toggle());
 
     initParticles();
     initClock();
