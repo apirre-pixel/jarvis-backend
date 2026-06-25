@@ -1,6 +1,6 @@
-// Service Worker — J.A.R.V.I.S v1.12
+// Service Worker — J.A.R.V.I.S v1.13
 // Versión incrementada para forzar actualización de caché
-const CACHE_NAME = 'jarvis-v2';
+const CACHE_NAME = 'jarvis-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -12,7 +12,6 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  // Forzar activación inmediata sin esperar a que se cierren pestañas
   self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
@@ -20,7 +19,6 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  // Eliminar cachés antiguas
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
@@ -28,11 +26,44 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener('fetch', (e) => {
-  // Nunca interceptar llamadas a la API
   if (e.request.method !== 'GET' || e.request.url.includes('/api/')) return;
 
+  const requestURL = new URL(e.request.url);
+  const isNavigation = e.request.mode === 'navigate' || requestURL.pathname === '/' || requestURL.pathname.endsWith('/index.html');
+
+  if (isNavigation) {
+    e.respondWith(networkFirst(e.request));
+    return;
+  }
+
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+    caches.match(e.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(e.request).then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(e.request, copy));
+        return response;
+      }).catch(() => cached);
+    })
   );
 });
+
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    const copy = response.clone();
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, copy);
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    return cached || new Response('Offline', { status: 503, statusText: 'Offline' });
+  }
+}
