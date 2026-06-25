@@ -1,6 +1,6 @@
-// Service Worker — J.A.R.V.I.S v1.13
+// Service Worker — J.A.R.V.I.S v1.14
 // Versión incrementada para forzar actualización de caché
-const CACHE_NAME = 'jarvis-v3';
+const CACHE_NAME = 'jarvis-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -35,24 +35,7 @@ self.addEventListener('message', (e) => {
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || e.request.url.includes('/api/')) return;
 
-  const requestURL = new URL(e.request.url);
-  const isNavigation = e.request.mode === 'navigate' || requestURL.pathname === '/' || requestURL.pathname.endsWith('/index.html');
-
-  if (isNavigation) {
-    e.respondWith(networkFirst(e.request));
-    return;
-  }
-
-  e.respondWith(
-    caches.match(e.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(e.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, copy));
-        return response;
-      }).catch(() => cached);
-    })
-  );
+  e.respondWith(networkFirst(e.request));
 });
 
 async function networkFirst(request) {
