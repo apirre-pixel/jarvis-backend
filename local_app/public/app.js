@@ -71,9 +71,6 @@
     waveform = new WaveformVisualizer('waveform-canvas');
     voice    = new VoiceModule(waveform);
 
-    // Expose toast globally so BackgroundMode can use it
-    window._jarvisToast = toast;
-
     voice.onResult = (text) => {
       const inp = $('chat-input');
       inp.value = text;
@@ -84,17 +81,6 @@
       if (code === 'mic_denied') toast('Acceso al micrófono denegado', 'error');
       else toast('Error de micrófono: ' + code, 'error');
     };
-
-    // Background mode — injects command into chat and sends
-    const bgMode = new BackgroundMode(voice, (text) => {
-      const inp = $('chat-input');
-      inp.value = text;
-      autoResize(inp);
-      toast(`"${text}"`, 'info');
-      setTimeout(sendMessage, 200);
-    });
-
-    $('btn-background')?.addEventListener('click', () => bgMode.toggle());
 
     initParticles();
     initClock();
