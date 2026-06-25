@@ -570,7 +570,28 @@ kbd {
 .btn-action:hover { box-shadow: var(--glow-b); transform: translateY(-1px); }
 .btn-danger { background: rgba(255,51,85,0.12); border-color: rgba(255,51,85,0.35); }
 .btn-danger:hover { box-shadow: 0 0 14px rgba(255,51,85,0.35); }
-
+.camera-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+#camera-video {
+  width: 100%;
+  min-height: 160px;
+  border-radius: var(--r);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-b);
+  object-fit: cover;
+}
+.camera-status {
+  margin-top: 8px;
+  font-family: var(--fn-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.4;
+  min-height: 18px;
+}
 /* ── TOAST ──────────────────────────────────────── */
 #toast-container { position: fixed; top: 58px; right: 14px; z-index: 300; display: flex; flex-direction: column; gap: 6px; }
 .toast {

@@ -7,6 +7,9 @@
   let streaming  = false;
   let waveform   = null;
   let voice      = null;
+  let cameraStream = null;
+  let cameraVideo  = null;
+  let cameraStatus = null;
 
   const MEMORY_KEY   = 'jarvis_memory';
   const MAX_MESSAGES = 40;
@@ -86,6 +89,9 @@
         toast('Error de micrófono: ' + code + (detail ? ` (${detail})` : ''), 'error');
       }
     };
+
+    cameraVideo  = $('camera-video');
+    cameraStatus = $('camera-status');
 
     initParticles();
     initClock();
@@ -231,6 +237,82 @@
     })();
   }
 
+  async function startCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast('Tu navegador no soporta cámara.', 'error');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false
+      });
+      cameraStream = stream;
+      cameraVideo.srcObject = stream;
+      cameraVideo.play().catch(() => {});
+      $('btn-camera').textContent = 'DETENER CÁMARA';
+      cameraStatus.textContent = 'Cámara activa. Pulsa ESCANEAR para analizar el entorno.';
+    } catch (err) {
+      console.error('[CAM]', err);
+      toast('No se pudo iniciar la cámara: ' + (err.message || 'error desconocido'), 'error');
+    }
+  }
+
+  function stopCamera() {
+    if (!cameraStream) return;
+    cameraStream.getTracks().forEach(track => track.stop());
+    cameraStream = null;
+    cameraVideo.srcObject = null;
+    $('btn-camera').textContent = 'INICIAR CÁMARA';
+    cameraStatus.textContent = 'Cámara inactiva';
+  }
+
+  async function scanEnvironment() {
+    if (!cameraStream) {
+      toast('Activa la cámara primero.', 'error');
+      return;
+    }
+    if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+      toast('Espera a que la cámara esté lista.', 'error');
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const width  = Math.min(320, cameraVideo.videoWidth);
+    const height = Math.round(width * (cameraVideo.videoHeight / cameraVideo.videoWidth));
+    canvas.width  = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(cameraVideo, 0, 0, width, height);
+    const data = ctx.getImageData(0, 0, width, height).data;
+
+    let r = 0, g = 0, b = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+    }
+    const pixels = data.length / 4;
+    const avgR = r / pixels;
+    const avgG = g / pixels;
+    const avgB = b / pixels;
+    const brightness = (avgR + avgG + avgB) / 3;
+
+    const lightLevel = brightness > 180 ? 'muy iluminado' : brightness > 110 ? 'bien iluminado' : 'oscuro';
+    const dominantColor = avgR > avgG && avgR > avgB ? 'rojo' : avgG >= avgR && avgG > avgB ? 'verde' : 'azul';
+    const observation = `Entorno ${lightLevel} con dominante ${dominantColor}.`;
+
+    cameraStatus.textContent = 'Entorno detectado: ' + observation;
+    toast('Entorno escaneado: ' + lightLevel, 'info');
+
+    messages.push({ role: 'user', content: `Analiza este entorno: ${observation}` });
+    appendMsg('user', `Escaneo de cámara: ${observation}`);
+    addRecent(`Escaneo de cámara: ${observation}`);
+    await fetchResponse();
+  }
+
   /* ── Events ─────────────────────────────────────── */
   function bindEvents() {
     const input      = $('chat-input');
@@ -242,6 +324,8 @@
     const saveKeyBtn = $('btn-save-key');
     const clearBtn   = $('btn-clear');
     const ttsToggle  = $('tts-toggle');
+    const camBtn     = $('btn-camera');
+    const scanBtn    = $('btn-camera-scan');
 
     // Send
     sendBtn.addEventListener('click', sendMessage);
@@ -294,6 +378,9 @@
       voice.setTTS(ttsToggle.checked);
       localStorage.setItem('jarvis_tts', ttsToggle.checked);
     });
+
+    camBtn?.addEventListener('click', () => cameraStream ? stopCamera() : startCamera());
+    scanBtn?.addEventListener('click', scanEnvironment);
   }
 
   /* ── Settings persistence ────────────────────────── */
