@@ -10,6 +10,8 @@
   let cameraStream = null;
   let cameraVideo  = null;
   let cameraStatus = null;
+  let detectionModel = null;
+  let detectorReady = false;
 
   const MEMORY_KEY   = 'jarvis_memory';
   const MAX_MESSAGES = 40;
@@ -100,6 +102,7 @@
     bindEvents();
     loadSettings();
     loadMemory();
+    initObjectDetector();
 
     $('boot-time').textContent = fmtTime(new Date());
   });
@@ -268,6 +271,25 @@
     cameraStatus.textContent = 'Cámara inactiva';
   }
 
+  async function initObjectDetector() {
+    if (!window.cocoSsd) {
+      toast('Detector de objetos no disponible.', 'info');
+      return;
+    }
+
+    cameraStatus.textContent = 'Cargando modelo de detección...';
+    try {
+      detectionModel = await cocoSsd.load();
+      detectorReady = true;
+      cameraStatus.textContent = 'Cámara inactiva';
+      toast('Detector de objetos listo.', 'success');
+    } catch (err) {
+      console.error('[DETECTOR]', err);
+      cameraStatus.textContent = 'Cámara inactiva';
+      toast('No se pudo cargar el detector de objetos.', 'error');
+    }
+  }
+
   async function scanEnvironment() {
     if (!cameraStream) {
       toast('Activa la cámara primero.', 'error');
@@ -302,7 +324,29 @@
 
     const lightLevel = brightness > 180 ? 'muy iluminado' : brightness > 110 ? 'bien iluminado' : 'oscuro';
     const dominantColor = avgR > avgG && avgR > avgB ? 'rojo' : avgG >= avgR && avgG > avgB ? 'verde' : 'azul';
-    const observation = `Entorno ${lightLevel} con dominante ${dominantColor}.`;
+
+    let objectObservation = '';
+    if (detectorReady && detectionModel) {
+      try {
+        const predictions = await detectionModel.detect(cameraVideo);
+        const visible = predictions
+          .filter(p => p.score > 0.35)
+          .map(p => p.class)
+          .filter((v, i, a) => a.indexOf(v) === i);
+
+        if (visible.length) {
+          if (visible.includes('remote')) {
+            objectObservation = 'Parece que hay un mando o control remoto en la escena.';
+          } else {
+            objectObservation = `Detectado: ${visible.join(', ')}.`;
+          }
+        }
+      } catch (err) {
+        console.warn('[DETECTOR]', err);
+      }
+    }
+
+    const observation = `Entorno ${lightLevel} con dominante ${dominantColor}.` + (objectObservation ? ` ${objectObservation}` : '');
 
     cameraStatus.textContent = 'Entorno detectado: ' + observation;
     toast('Entorno escaneado: ' + lightLevel, 'info');
