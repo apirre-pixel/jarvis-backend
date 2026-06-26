@@ -212,7 +212,15 @@
           </div>
         </div>
         <div class="panel-card">
-          <div class="panel-label">VOZ</div>
+          <div class="panel-label">ENTORNO</div>
+          <video id="camera-video" autoplay muted playsinline></video>
+          <div class="camera-actions">
+            <button class="btn-action btn-small" id="btn-camera">INICIAR CÁMARA</button>
+            <button class="btn-action btn-small" id="btn-camera-scan">ESCANEAR</button>
+          </div>
+          <div class="camera-status" id="camera-status">Cámara inactiva</div>
+        </div>
+        <div class="panel-card">
           <label class="toggle-row">
             <span>Hablar respuestas</span>
             <label class="toggle">
@@ -266,6 +274,8 @@
 
   <script src="waveform.js"></script>
   <script src="voice.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
