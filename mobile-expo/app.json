@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "J.A.R.V.I.S",
+    "slug": "jarvis-expo-go",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "jarvis",
+    "android": {
+      "package": "com.jarvis.assistant",
+      "adaptiveIcon": {
+        "backgroundColor": "#06111f"
+      }
+    },
+    "extra": {
+      "backendUrl": "https://jarvis-backend-3c4z.onrender.com"
+    }
+  }
+}
