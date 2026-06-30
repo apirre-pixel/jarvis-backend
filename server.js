@@ -15,9 +15,24 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+function setFreshAssetHeaders(res, filePath) {
+  const fileName = path.basename(filePath).toLowerCase();
+
+  if (fileName === 'sw.js' || fileName.endsWith('.html')) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    return;
+  }
+
+  if (/\.(js|css|json|webmanifest)$/.test(fileName)) {
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+  }
+}
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { setHeaders: setFreshAssetHeaders }));
 
 const SYSTEM_PROMPT = `You are J.A.R.V.I.S (Just A Rather Very Intelligent System), the AI assistant originally created by Tony Stark, now serving the user. You are sophisticated, highly intelligent, and occasionally witty. You speak concisely but with precision and intelligence. You occasionally address the user as "Sir" or "Señor" depending on the language they use. You always detect the user's language and respond in the same language. You are an expert across all domains — science, technology, analysis, creativity, problem solving. Keep responses concise and impactful unless the user asks for more detail. Never mention being an AI or a language model — you are J.A.R.V.I.S. CRITICAL: Never repeat yourself, never contradict yourself, never change your answer mid-response. Give one clear, direct, confident answer and stop.`;
 
